@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Components/custom_button.dart';
+import 'package:gov_connect_app/Screens/register/signup_screen.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,18 +21,17 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(30.0),
+            padding: EdgeInsets.symmetric(vertical: height*0.0275, horizontal: 28.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 16),
+                SizedBox(height: height * 0.02),
                 Image.asset(
                   'assets/images/logo/logo.png', 
                   width: width*0.8,
                   height: height*0.2,                
                 ),
-
-                const SizedBox(height: 18),
+                SizedBox(height: height * 0.02),
                 const Text(
                   'Login',
                   style: TextStyle(
@@ -40,13 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: height * 0.0275),
                 _buildTextField(label: 'NIC Number'),
-                const SizedBox(height: 20),
+                SizedBox(height: height * 0.025),
                 _buildTextField(label: 'Password', obscureText: true),
-                const SizedBox(height: 30),
+                SizedBox(height: height * 0.035),
                 _buildCaptcha(),
-                const SizedBox(height: 40),
+                SizedBox(height: height * 0.05),
                 CustomButton(
                     text: 'Submit',
                     backgroundColor: primaryColor,
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       //   MaterialPageRoute(builder: (context) => const HomeScreen()),
                       // );
                     }),
-                const SizedBox(height: 30),
+                SizedBox(height: height * 0.035),
                 _buildRegisterLink(),
               ],
             ),
@@ -123,7 +123,12 @@ class _LoginScreenState extends State<LoginScreen> {
           style: TextStyle(color: greyTextColor),
         ),
         GestureDetector(
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SignupScreen()),
+            );
+          },
           child: const Text(
             'Register',
             style: TextStyle(
