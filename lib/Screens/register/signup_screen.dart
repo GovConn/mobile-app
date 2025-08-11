@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gov_connect_app/Screens/login/login_screen.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
-
 import '../../Components/custom_button.dart';
 import '../../Components/upload_button.dart';
 
@@ -12,21 +12,20 @@ class SignupScreen extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(30.0),
+            padding: EdgeInsets.symmetric(vertical: height*0.02, horizontal: 28.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 8),
+                SizedBox(height: height * 0.01),
                 Image.asset(
                   'assets/images/logo/logo.png', 
                   width: width*0.8,
                   height: height*0.2,                
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: height * 0.015),
                 const Center(
                   child: Text(
                     'Signup',
@@ -37,15 +36,15 @@ class SignupScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: height * 0.02),
                 _buildTextField(label: 'NIC Number'),
-                const SizedBox(height: 30),
+                SizedBox(height: height * 0.03),
                 const UploadButton(label: 'Clear images of NIC - Front'),
-                const SizedBox(height: 20),
+                SizedBox(height: height * 0.02),
                 const UploadButton(label: 'Clear images of NIC - Front'),
-                const SizedBox(height: 40),
+                SizedBox(height:height * 0.04),
                 _buildInfoText(),
-                const SizedBox(height: 40),
+                SizedBox(height: height * 0.06),
                 CustomButton(
                   text: 'Next',
                   backgroundColor: primaryColor,
@@ -58,8 +57,8 @@ class SignupScreen extends StatelessWidget {
                     // );
                   },
                 ),
-                const SizedBox(height: 20),
-                _buildLoginLink(),
+                SizedBox(height: height * 0.03),
+                _buildLoginLink(context),
               ],
             ),
           ),
@@ -108,25 +107,34 @@ class SignupScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoginLink() {
-    return const Center(
-      child: Text.rich(
-        TextSpan(
-          style: TextStyle(color: blackPrimary, fontSize: 12),
-          children: [
-            TextSpan(text: 'Have a validated account? '),
-            TextSpan(
-              text: 'Login',
-              style: TextStyle(
-                color: primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
-              // Add recognizer for tap event
-            ),
-          ],
+  Widget _buildLoginLink(BuildContext context) {
+  return Center(
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Have a validated account? ',
+          style: TextStyle(color: blackPrimary, fontSize: 14),
         ),
-      ),
-    );
-  }
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          },
+          child: const Text(
+            'Login',
+            style: TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
 

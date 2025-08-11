@@ -11,15 +11,15 @@ class LanguageProvider extends ChangeNotifier {
   }
 
   TextTheme getTextTheme(BuildContext context) {
-    if (_language == "sinhala") {
-      return GoogleFonts.notoSansSinhalaTextTheme(
-        Theme.of(context).textTheme,
-      );
-    } else if (_language == "tamil") {
-      return GoogleFonts.notoSansTamilTextTheme(
-        Theme.of(context).textTheme,
-      );
-    }
+    // if (_language == "sinhala") {
+    //   return GoogleFonts.notoSansSinhalaTextTheme(
+    //     Theme.of(context).textTheme,
+    //   );
+    // } else if (_language == "tamil") {
+    //   return GoogleFonts.notoSansTamilTextTheme(
+    //     Theme.of(context).textTheme,
+    //   );
+    // }
     return GoogleFonts.poppinsTextTheme(
       Theme.of(context).textTheme,
     );
