@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gov_connect_app/Screens/onboarding/language_selection.dart';
 import 'package:gov_connect_app/Screens/onboarding/splash_screen.dart';
-import 'package:gov_connect_app/Screens/services/eservices_screen.dart';
+import 'package:gov_connect_app/providers/doc_upload_provider.dart';
+import 'package:gov_connect_app/providers/register_provider.dart';
 import 'package:provider/provider.dart';
-import 'Screens/Appointment/confirmation_screen.dart';
 import 'providers/language_provider.dart';
 
 void main() {
@@ -25,6 +24,8 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<LanguageProvider>(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider<RegistrationProvider>(create: (context) => RegistrationProvider()),
+        ChangeNotifierProvider<DocUploadProvider>(create: (context) => DocUploadProvider()),
       ],
       builder: (context, child) {
         final languageProvider = Provider.of<LanguageProvider>(context);

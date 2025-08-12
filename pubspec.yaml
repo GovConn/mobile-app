@@ -38,6 +38,11 @@ dependencies:
   google_fonts: 6.1.0
   provider:
   table_calendar: 
+  http:
+  image_picker:
+  file_picker: 
+  path: 
+  convert: 
 
 dev_dependencies:
   flutter_test:

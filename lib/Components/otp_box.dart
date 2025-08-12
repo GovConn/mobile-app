@@ -7,9 +7,11 @@ class OTPBox extends StatelessWidget {
   const OTPBox({
     super.key,
     required this.context,
+    this.controller
   });
 
   final BuildContext context;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
