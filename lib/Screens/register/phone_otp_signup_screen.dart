@@ -4,7 +4,6 @@ import 'package:gov_connect_app/Components/custom_button.dart';
 import 'package:gov_connect_app/Components/logo_banner.dart';
 import 'package:gov_connect_app/Components/otp_box.dart';
 import 'package:gov_connect_app/Screens/register/register_success_screen.dart';
-import 'package:gov_connect_app/Screens/register/signup_screen.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
 import 'package:provider/provider.dart';
 

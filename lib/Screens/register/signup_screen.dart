@@ -9,6 +9,7 @@ import 'package:gov_connect_app/screens/login/login_screen.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
 import 'package:provider/provider.dart';
 import '../../Components/bio_data_form.dart';
+import '../../Components/toast_message.dart';
 import '../../components/custom_button.dart';
 
 import '../../providers/doc_upload_provider.dart';
@@ -182,14 +183,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 CustomButton(
                   text: 'Next',
-                  backgroundColor: registrationProvider.isReadyForNext
-                      ? primaryColor
-                      : primaryColorLight,
+                  backgroundColor: primaryColor,
                   textColor: blackPrimary,
                   onPressed: () {
                     if (!registrationProvider.isReadyForNext) {
+                      ToastMessage.showInfo(context,
+                          'Complete required fields before proceeding');
                       return;
-                    } 
+                    }
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -209,42 +210,42 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
- Widget _buildStepButton({
-  required String text,
-  required bool isCompleted,
-  required VoidCallback onPressed,
-}) {
-  final Color borderColor = isCompleted ? Colors.green : Colors.transparent;
-  final Color bgColor = isCompleted ? Colors.green : blackPrimary;
-  final Color textColor = isCompleted ? Colors.white : Colors.white;
+  Widget _buildStepButton({
+    required String text,
+    required bool isCompleted,
+    required VoidCallback onPressed,
+  }) {
+    final Color borderColor = isCompleted ? Colors.green : Colors.transparent;
+    final Color bgColor = isCompleted ? Colors.green : blackPrimary;
+    final Color textColor = isCompleted ? Colors.white : Colors.white;
 
-  return ElevatedButton(
-    onPressed: isCompleted ? null : onPressed,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: bgColor,
-      foregroundColor: textColor,
-      minimumSize: const Size(double.infinity, 54),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor), // match upload button outline
-      ),
-      disabledBackgroundColor:
-          isCompleted ? Colors.green.withOpacity(0.7) : Colors.grey.withOpacity(0.1),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          isCompleted ? Icons.check_circle : Icons.edit,
-          color: textColor,
+    return ElevatedButton(
+      onPressed: isCompleted ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bgColor,
+        foregroundColor: textColor,
+        minimumSize: const Size(double.infinity, 54),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: borderColor), // match upload button outline
         ),
-        const SizedBox(width: 8),
-        Text(text, style: TextStyle(color: textColor)),
-      ],
-    ),
-  );
-}
-
+        disabledBackgroundColor: isCompleted
+            ? Colors.green.withOpacity(0.7)
+            : Colors.grey.withOpacity(0.1),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isCompleted ? Icons.check_circle : Icons.edit,
+            color: textColor,
+          ),
+          const SizedBox(width: 8),
+          Text(text, style: TextStyle(color: textColor)),
+        ],
+      ),
+    );
+  }
 
   Widget _buildInfoText() {
     return const Padding(

@@ -69,6 +69,19 @@ bool get isReadyForNext {
   return biodataComplete && docsComplete;
 }
 
+void clearRegistrationData() {
+  nic = null;
+  firstName = null;
+  lastName = null;
+  email = null;
+  phone = null;
+  nicFrontUrl = null;
+  nicBackUrl = null;
+  _status = RegistrationStatus.initial;
+  _errorMessage = '';
+  _registrationResponse = null;
+  notifyListeners();
+}
 
   Future<void> registerCitizen() async {
     if (nic == null ||
@@ -110,4 +123,6 @@ bool get isReadyForNext {
     
     notifyListeners();
   }
+
+  
 }
