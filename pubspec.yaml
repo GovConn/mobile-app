@@ -43,6 +43,7 @@ dependencies:
   file_picker: 
   path: 
   convert: 
+  flutter_secure_storage: 
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Components/custom_button.dart';
+import 'package:gov_connect_app/Components/toast_message.dart';
 import 'package:gov_connect_app/Screens/register/signup_screen.dart';
+import 'package:gov_connect_app/providers/auth_provider.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
+import 'package:provider/provider.dart';
+
+import '../home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,6 +16,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _nicController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _rememberMe = false;
 
   @override
@@ -21,15 +28,16 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: height*0.0275, horizontal: 28.0),
+            padding: EdgeInsets.symmetric(
+                vertical: height * 0.0275, horizontal: 28.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(height: height * 0.02),
                 Image.asset(
-                  'assets/images/logo/logo.png', 
-                  width: width*0.8,
-                  height: height*0.2,                
+                  'assets/images/logo/logo.png',
+                  width: width * 0.8,
+                  height: height * 0.2,
                 ),
                 SizedBox(height: height * 0.02),
                 const Text(
@@ -41,23 +49,34 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 SizedBox(height: height * 0.0275),
-                _buildTextField(label: 'NIC Number'),
+                _buildTextField(label: 'NIC Number',controller: _nicController),
                 SizedBox(height: height * 0.025),
-                _buildTextField(label: 'Password', obscureText: true),
+                _buildTextField(label: 'Password',controller: _passwordController, obscureText: true),
                 SizedBox(height: height * 0.035),
                 _buildCaptcha(),
                 SizedBox(height: height * 0.05),
                 CustomButton(
-                    text: 'Submit',
-                    backgroundColor: primaryColor,
-                    textColor: blackPrimary,
-                    onPressed: () {
-                      // Handle login action
-                      // Navigator.pushReplacement(
-                      //   context,
-                      //   MaterialPageRoute(builder: (context) => const HomeScreen()),
-                      // );
-                    }),
+                  text: 'Submit',
+                  backgroundColor: primaryColor,
+                  textColor: blackPrimary,
+                  onPressed: () async {
+                    final authProvider =
+                        Provider.of<AuthProvider>(context, listen: false);
+                    final nic = _nicController.text.trim();
+                    final password = _passwordController.text.trim();
+                    bool success = await authProvider.login(nic, password);
+                    if (success && mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()),
+                      );
+                    } else if (mounted) {
+                      ToastMessage.showError(
+                          context, authProvider.errorMessage);
+                    }
+                  },
+                ),
                 SizedBox(height: height * 0.035),
                 _buildRegisterLink(),
               ],
@@ -68,9 +87,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({required String label, bool obscureText = false}) {
+  Widget _buildTextField({required String label,required TextEditingController controller, bool obscureText = false}) {
     return TextField(
       obscureText: obscureText,
+      controller: controller,
       style: const TextStyle(color: blackPrimary),
       decoration: InputDecoration(
         labelText: label,
