@@ -1,5 +1,12 @@
-import 'package:flutter/material.dart';
+import 'dart:developer';
 
+import 'package:flutter/material.dart';
+import 'package:gov_connect_app/Screens/Appointment/appointment_service_screen.dart';
+import 'package:gov_connect_app/Screens/login/login_screen.dart';
+import 'package:gov_connect_app/services/auth_service.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
 import '../../theme/color_theme.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -20,7 +27,7 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 30),
                 _buildOngoingServicesCard(),
                 const SizedBox(height: 20),
-                _buildServiceGrid(),
+                _buildServiceGrid(context),
                 const SizedBox(height: 30),
                 _buildHistoryButton(),
               ],
@@ -123,7 +130,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   // Builds the 2x2 grid of service buttons
-  Widget _buildServiceGrid() {
+  Widget _buildServiceGrid(BuildContext context) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -135,18 +142,52 @@ class HomeScreen extends StatelessWidget {
         _buildServiceButton(
           imagePath: 'assets/icons/schedule.png',
           label: 'Book an\nAppointment',
+          onTap: ()  {
+            final authProvider =
+                Provider.of<AuthProvider>(context, listen: false);
+                authProvider.loadToken().then((_) async {
+                if (authProvider.token == null) {
+     debugPrint("No token");
+    }
+    log("Token: ${authProvider.token}");});
+            if (authProvider.status == AuthStatus.Authenticated) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AppointmentServicesScreen()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            }
+          },
         ),
         _buildServiceButton(
           imagePath: 'assets/icons/services.png',
           label: 'E Services',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const AppointmentServicesScreen()),
+            );
+          },
         ),
         _buildServiceButton(
           imagePath: 'assets/icons/Ai-logo.png',
           label: 'AI Assistant',
+          onTap: () {
+            // Handle AI Assistant tap
+          },
         ),
         _buildServiceButton(
           imagePath: 'assets/icons/coming-soon.png',
           label: 'Coming Soon',
+          onTap: () {
+            // Handle Coming Soon tap
+          },
         ),
       ],
     );
@@ -156,11 +197,10 @@ class HomeScreen extends StatelessWidget {
   Widget _buildServiceButton({
     required String label,
     required String imagePath,
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: () {
-        // Handle button tap
-      },
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: whitePrimary,
@@ -178,7 +218,7 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              imagePath, 
+              imagePath,
               width: 68,
               height: 68,
             ),

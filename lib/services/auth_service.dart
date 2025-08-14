@@ -24,8 +24,6 @@ class AuthService {
       'password': password,
     };
 
-    debugPrint(body.toString());
-
     try {
       final response = await http.post(url, headers: headers, body: body);
 
