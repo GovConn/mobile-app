@@ -16,6 +16,7 @@ class AuthProvider with ChangeNotifier {
     AuthStatus get status => _status;
     String get errorMessage => _errorMessage;
     bool get isAuthenticated => _status == AuthStatus.Authenticated;
+    Future<void> checkLoginStatus() => _checkLoginStatus();
 
     AuthProvider() {
         _checkLoginStatus();

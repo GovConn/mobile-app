@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gov_connect_app/Screens/home/home_screen.dart';
 import 'package:gov_connect_app/Screens/login/login_screen.dart';
+import 'package:gov_connect_app/services/auth_service.dart';
 import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
 
 class LanguageSelectionScreen extends StatelessWidget {
@@ -15,18 +18,22 @@ class LanguageSelectionScreen extends StatelessWidget {
     required double width,
     required double height,
   }) {
-     final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
     return Column(
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: height*0.035, fontWeight: FontWeight.w600),
+          style:
+              TextStyle(fontSize: height * 0.035, fontWeight: FontWeight.w600),
           textAlign: TextAlign.center,
         ),
-       SizedBox(height: height * 0.01),
+        SizedBox(height: height * 0.01),
         Text(
           subtitle,
-          style:  TextStyle(color: Colors.black, fontSize: height*0.0215, fontWeight: FontWeight.w400),
+          style: TextStyle(
+              color: Colors.black,
+              fontSize: height * 0.0215,
+              fontWeight: FontWeight.w400),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
@@ -38,16 +45,30 @@ class LanguageSelectionScreen extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
           ),
-          onPressed: () {
-            // langProvider.setLanguage(langCode);
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-            );
+          onPressed: () async {
+            final authProvider =
+                Provider.of<AuthProvider>(context, listen: false);
+
+            await authProvider.checkLoginStatus();
+
+            if (!context.mounted) return;
+
+            if (authProvider.status == AuthStatus.Authenticated) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            }
           },
           child: Text(
             btnText,
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold),
           ),
         ),
         SizedBox(height: height * 0.025),
@@ -62,14 +83,19 @@ class LanguageSelectionScreen extends StatelessWidget {
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Padding(
-        padding:  EdgeInsets.only(left: width*0.05,right: width*0.05, top: height*0.1, bottom: height*0.05),
+        padding: EdgeInsets.only(
+            left: width * 0.05,
+            right: width * 0.05,
+            top: height * 0.1,
+            bottom: height * 0.05),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             languageTile(
               context: context,
               title: "Welcome",
-              subtitle: "This is Sri Lanka's e-Government portal. Select your language.",
+              subtitle:
+                  "This is Sri Lanka's e-Government portal. Select your language.",
               btnText: "English",
               langCode: "english",
               width: width,
@@ -87,11 +113,12 @@ class LanguageSelectionScreen extends StatelessWidget {
             languageTile(
               context: context,
               title: "வணக்கம்",
-              subtitle: "இது இலங்கையின் மின்-அரசு போர்டல். உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்.",
-              btnText: "தமிழ்",  
-              langCode: "tamil", 
+              subtitle:
+                  "இது இலங்கையின் மின்-அரசு போர்டல். உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்.",
+              btnText: "தமிழ்",
+              langCode: "tamil",
               width: width,
-              height: height,         
+              height: height,
             ),
           ],
         ),
