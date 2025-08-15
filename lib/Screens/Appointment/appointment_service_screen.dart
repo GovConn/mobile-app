@@ -84,7 +84,7 @@ class _AppointmentServicesScreenState extends State<AppointmentServicesScreen> {
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => AppointmentDetailsScreen(),
+                              builder: (context) => AppointmentDetailsScreen(categoryId: serviceProvider.services[index].id,),
                             ),
                           );
                         },
