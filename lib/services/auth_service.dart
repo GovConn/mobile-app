@@ -1,4 +1,6 @@
+
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/base_url.dart';
 import 'package:gov_connect_app/models/user_model.dart';
@@ -33,7 +35,11 @@ class AuthService {
 
         await _storage.write(key: _tokenKey, value: user.accessToken);
 
+        await _storage.write(
+          key: 'user_data', value: json.encode(user.toJson()));
         return user;
+      
+
       } else {
         final errorBody = json.decode(response.body);
         debugPrint(response.statusCode.toString());
@@ -54,6 +60,21 @@ class AuthService {
   Future<String?> getToken() async {
     return await _storage.read(key: _tokenKey);
   }
+
+  Future<UserModel?> getUser() async {
+  final userData = await _storage.read(key: 'user_data');
+  debugPrint('User data: $userData');
+  if (userData != null) {
+    try {
+      final Map<String, dynamic> userMap = jsonDecode(userData);    
+      return UserModel.fromJson(userMap);
+    } catch (e) {
+      debugPrint('Error decoding user data: $e');
+      return null;
+    }
+  }
+  return null;
+}
 
   // Method to check if a token exists, indicating an active session
   Future<bool> hasToken() async {

@@ -31,20 +31,38 @@ class UserModel {
         required this.tokenType,
     });
 
-    factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json["id"],
-        nic: json["nic"],
-        firstName: json["first_name"],
-        lastName: json["last_name"],
-        email: json["email"],
-        phone: json["phone"],
-        role: json["role"],
-        active: json["active"],
-        documentLinks: List<DocumentLink>.from(json["document_links"].map((x) => DocumentLink.fromJson(x))),
-        createdAt: DateTime.parse(json["created_at"]),
-        accessToken: json["access_token"],
-        tokenType: json["token_type"],
-    );
+factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
+  id: json["id"] ?? 0,
+  nic: json["nic"] ?? "",
+  firstName: json["first_name"] ?? "",
+  lastName: json["last_name"] ?? "",
+  email: json["email"] ?? "",
+  phone: json["phone"] ?? "",
+  role: json["role"] ?? "",
+  active: json["active"] ?? false,
+  documentLinks: json["document_links"] != null
+      ? List<DocumentLink>.from(json["document_links"].map((x) => DocumentLink.fromJson(x)))
+      : [],
+  createdAt: json["created_at"] != null ? DateTime.parse(json["created_at"]) : DateTime.now(),
+  accessToken: json["access_token"] ?? "",
+  tokenType: json["token_type"] ?? "",
+);
+
+
+   Map<String, dynamic> toJson() => {
+        "id": id,
+        "nic": nic,
+        "first_name": firstName,
+        "last_name": lastName,
+        "email": email,
+        "phone": phone,
+        "role": role,
+        "active": active,
+        "document_links": List<dynamic>.from(documentLinks.map((x) => x.toJson())),
+        "created_at": createdAt.toIso8601String(),
+        "access_token": accessToken,
+        "token_type": tokenType,
+      };
 }
 
 class DocumentLink {
@@ -59,8 +77,15 @@ class DocumentLink {
     });
 
     factory DocumentLink.fromJson(Map<String, dynamic> json) => DocumentLink(
-        title: json["title"],
-        url: json["url"],
-        uploadedAt: DateTime.parse(json["uploaded_at"]),
-    );
+  title: json["title"] ?? "",
+  url: json["url"] ?? "",
+  uploadedAt: json["uploaded_at"] != null ? DateTime.parse(json["uploaded_at"]) : DateTime.now(),
+);
+
+
+    Map<String, dynamic> toJson() => {
+    "title": title,
+    "url": url,
+    "uploaded_at": uploadedAt.toIso8601String(), 
+};
 }

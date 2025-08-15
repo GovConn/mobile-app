@@ -16,7 +16,10 @@ class AuthProvider with ChangeNotifier {
   AuthStatus _status = AuthStatus.Uninitialized;
   String _errorMessage = '';
   String? _token;
-  Timer? _tokenExpiryTimer; 
+  Timer? _tokenExpiryTimer;
+
+  bool _isUserLoading = false;
+  bool get isUserLoading => _isUserLoading; 
 
   String? get token => _token;
   UserModel? get user => _user;
@@ -38,6 +41,28 @@ class AuthProvider with ChangeNotifier {
     } else {
       _status = AuthStatus.Unauthenticated;
     }
+    notifyListeners();
+  }
+
+  Future<void> fetchUser() async {
+    if (_user != null) return; // Don't fetch if we already have user
+    
+    _isUserLoading = true;
+    notifyListeners();
+    
+    try {
+      _user = await _authService.getUser();
+    } catch (e) {
+      debugPrint('Error fetching user: $e');
+    } finally {
+      _isUserLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Optional: clear user data (logout)
+  void clearUser() {
+    _user = null;
     notifyListeners();
   }
 
@@ -79,6 +104,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     await _authService.logout(); 
+    clearUser();
     _user = null;
     _token = null;
     _status = AuthStatus.Unauthenticated;
