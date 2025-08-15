@@ -133,8 +133,8 @@ class _AppointmentServicesScreenState extends State<AppointmentServicesScreen> {
               Image.asset(
                 getIconForService(service.categoryEn.toString()),
                 color: primaryColor,
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
               ),
               const SizedBox(width: 16),
               Expanded(
