@@ -1,5 +1,7 @@
-
 import 'package:flutter/material.dart';
+import 'package:gov_connect_app/Screens/Appointment/confirmation_screen.dart';
+import 'package:gov_connect_app/providers/appointment_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class ReservationScreen extends StatefulWidget {
@@ -14,26 +16,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
   DateTime? _selectedDay;
   int _selectedTimeIndex = 1;
 
-  final Map<DateTime, int> _availableSlots = {
-    // A map to simulate available slots per day
-    DateTime.now().add(const Duration(days: 2)): 15,
-    DateTime.now().add(const Duration(days: 3)): 10,
-    DateTime.now().add(const Duration(days: 5)): 20,
-    DateTime.now().add(const Duration(days: 10)): 5,
-  };
-
-  final List<String> _timeSlots = [
-    '8.30 AM - 9.00 AM',
-    '9.00 AM - 9.30 AM',
-    '9.30 AM - 10.00 AM',
-    '10.00 AM - 10.30 AM',
-    '10.30 AM - 11.00 AM',
-    '11.00 AM - 11.30 AM',
-  ];
-
   @override
   void initState() {
     super.initState();
+    final appointmentProvider =
+        Provider.of<AppointmentProvider>(context, listen: false);
+    appointmentProvider.getAvailableSlots();
     _selectedDay = _focusedDay;
   }
 
@@ -88,7 +76,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Handle Next button press
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ConfirmationScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber[600],
@@ -168,6 +161,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
         return isSameDay(_selectedDay, day);
       },
       onDaySelected: (selectedDay, focusedDay) {
+        final appointmentProvider =
+            Provider.of<AppointmentProvider>(context, listen: false);
+
+        appointmentProvider.selectDate(selectedDay);
         setState(() {
           _selectedDay = selectedDay;
           _focusedDay = focusedDay;
@@ -195,14 +192,27 @@ class _ReservationScreenState extends State<ReservationScreen> {
       ),
       calendarBuilders: CalendarBuilders(
         defaultBuilder: (context, day, focusedDay) {
-          final isPastDay = day.isBefore(
-              DateTime.now().subtract(const Duration(hours: 24)));
-          final availableSlots = _availableSlots[
-              DateTime(day.year, day.month, day.day, 0, 0, 0)];
-          final bool hasSlots = availableSlots != null && availableSlots > 0;
+          final isPastDay =
+              day.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+
+          final appointmentProvider =
+              Provider.of<AppointmentProvider>(context, listen: false);
+
+          // Check if there are slots on this date
+          final hasSlots = appointmentProvider.slots.any(
+            (slot) =>
+                slot.startTime.year == day.year &&
+                slot.startTime.month == day.month &&
+                slot.startTime.day == day.day,
+          );
+
           return GestureDetector(
             onTap: () {
               if (!isPastDay) {
+                final appointmentProvider =
+                    Provider.of<AppointmentProvider>(context, listen: false);
+                appointmentProvider
+                    .selectDate(day); // this handles slots + reset
                 setState(() {
                   _selectedDay = day;
                   _focusedDay = focusedDay;
@@ -216,9 +226,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                     ? Colors.amber[600]
                     : (isPastDay
                         ? Colors.grey[100]
-                        : (hasSlots
-                            ? Colors.amber[100]
-                            : Colors.grey[300])),
+                        : (hasSlots ? Colors.amber[100] : Colors.grey[300])),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -256,8 +264,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
           );
         },
         todayBuilder: (context, day, focusedDay) {
-          final isPastDay = day.isBefore(
-              DateTime.now().subtract(const Duration(hours: 24)));
+          final isPastDay =
+              day.isBefore(DateTime.now().subtract(const Duration(hours: 24)));
           return GestureDetector(
             onTap: () {
               if (!isPastDay) {
@@ -299,62 +307,60 @@ class _ReservationScreenState extends State<ReservationScreen> {
   }
 
   Widget _buildTimeSlotsGrid() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: List.generate(_timeSlots.length, (index) {
-        final time = _timeSlots[index];
-        final isSelected = _selectedTimeIndex == index;
-        final isUnavailable = index == 3; // Example of an unavailable slot
-        final count = 11 - index; // Dynamic count example
+    return Consumer<AppointmentProvider>(
+      builder: (context, appointmentProvider, child) {
+        if (appointmentProvider.slotState == NotifierState.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-        return GestureDetector(
-          onTap: isUnavailable
-              ? null
-              : () => setState(() => _selectedTimeIndex = index),
-          child: Card(
-            elevation: 0,
-            color: isSelected
-                ? Colors.amber[600]
-                : (isUnavailable ? Colors.red[100] : Colors.white),
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                  color: isSelected
-                      ? Colors.amber[600]!
-                      : (isUnavailable
-                          ? Colors.red[100]!
-                          : Colors.grey[300]!),
-                  width: 1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    time,
+        if (appointmentProvider.slotState == NotifierState.error) {
+          return Text(
+              appointmentProvider.errorMessage ?? "Failed to load slots");
+        }
+
+        if (appointmentProvider.slots.isEmpty) {
+          return const Text("No slots available for this date.");
+        }
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: List.generate(appointmentProvider.slots.length, (index) {
+            final time = appointmentProvider.slots[index];
+            final isSelected = _selectedTimeIndex == index;
+
+            return GestureDetector(
+              onTap: () => setState(() => _selectedTimeIndex = index),
+              child: Card(
+                elevation: 0,
+                color: isSelected ? Colors.amber[600] : Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(
+                    color: isSelected ? Colors.amber[600]! : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
+                  child: Text(
+                    "${time.startTime} - ${time.endTime}",
                     style: TextStyle(
                       fontSize: 16,
                       color: isSelected ? Colors.white : Colors.black,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Available: $count',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isSelected ? Colors.white70 : Colors.black54,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          }),
         );
-      }),
+      },
     );
   }
 }
@@ -378,4 +384,3 @@ extension on DateTime {
     return months[month - 1];
   }
 }
-

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/models/office_service_model.dart';
 import 'package:gov_connect_app/services/office_api_service.dart';
-
+import '../models/appointment_slot_model.dart';
 import '../models/office_model.dart';
 
 
@@ -11,27 +11,33 @@ enum NotifierState { initial, loading, loaded, error }
 class AppointmentProvider with ChangeNotifier {
   final OfficeAPiService _apiService = OfficeAPiService();
 
-
+  List<AppointmentSlot> _slots = [];
   List<Office> _offices = [];
   List<GovService> _services = [];
 
   Office? _selectedOffice;
   GovService? _selectedService;
+  DateTime _selectedDate = DateTime.now(); 
+  AppointmentSlot? _selectedSlot; 
 
   NotifierState _officeState = NotifierState.initial;
   NotifierState _serviceState = NotifierState.initial;
+  NotifierState _slotState = NotifierState.initial; 
   String _errorMessage = '';
 
-  // Getters
   List<Office> get offices => _offices;
   List<GovService> get services => _services;
+  List<AppointmentSlot> get slots => _slots;
   Office? get selectedOffice => _selectedOffice;
   GovService? get selectedService => _selectedService;
+  DateTime get selectedDate => _selectedDate;
+  AppointmentSlot? get selectedSlot => _selectedSlot;
   NotifierState get officeState => _officeState;
   NotifierState get serviceState => _serviceState;
+  NotifierState get slotState => _slotState;
   String get errorMessage => _errorMessage;
 
-  // Methods
+
   Future<void> getOffices(int categoryId) async {
     _officeState = NotifierState.loading;
     notifyListeners();
@@ -58,9 +64,47 @@ class AppointmentProvider with ChangeNotifier {
       }
     }
   }
+
+    void selectSlot(AppointmentSlot? slot) {
+    _selectedSlot = slot;
+    notifyListeners();
+  }
+
+    void selectDate(DateTime date) {
+    _selectedDate = date;
+    _resetSlotSelection(); 
+    notifyListeners();
+    if (_selectedService != null) {
+      getAvailableSlots();
+    }
+  }
   
   void selectService(GovService? service) {
-    _selectedService = service;
+    if (_selectedService != service) {
+      _selectedService = service;
+      _resetSlotSelection();
+      notifyListeners();
+      if (service != null) {
+        getAvailableSlots();
+      }
+    }
+  }
+
+  Future<void> getAvailableSlots() async {
+    if (_selectedService == null) return;
+
+    _slotState = NotifierState.loading;
+    notifyListeners();
+
+    try {
+      _slots = await _apiService.fetchAvailableSlots(
+          _selectedService!.serviceId, _selectedDate);
+      _slotState = NotifierState.loaded;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _slots = []; // Clear slots on error
+      _slotState = NotifierState.error;
+    }
     notifyListeners();
   }
 
@@ -76,5 +120,11 @@ class AppointmentProvider with ChangeNotifier {
       _serviceState = NotifierState.error;
     }
     notifyListeners();
+  }
+
+  void _resetSlotSelection() {
+    _slots = [];
+    _selectedSlot = null;
+    _slotState = NotifierState.initial;
   }
 }
