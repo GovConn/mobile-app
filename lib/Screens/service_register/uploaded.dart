@@ -77,7 +77,7 @@ class UploadedScreen extends StatelessWidget {
           const SizedBox(height: 20), // Spacing before the action button
         ],
       ),
-      actionButtonText: 'Upload', // Text for the bottom action button
+      actionButtonText: 'Uploaded', // Text for the bottom action button
       onActionButtonPressed: () {
         // Handle action button press
         print('Action button pressed!');
