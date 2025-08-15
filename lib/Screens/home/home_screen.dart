@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Column(
               children: [
-                _buildHeader(width, height),
+                _buildHeader(width, height, context),
                 const SizedBox(height: 30),
                 _buildOngoingServicesCard(),
                 const SizedBox(height: 20),
@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(double width, double height) {
+  Widget _buildHeader(double width, double height,BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -48,7 +48,14 @@ class HomeScreen extends StatelessWidget {
           fit: BoxFit.contain,
         ),
         ElevatedButton(
-          onPressed: () {},
+          onPressed: () {
+            final authProvider = Provider.of<AuthProvider>(context, listen: false);
+           authProvider.logout();
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryColor,
             shape: RoundedRectangleBorder(
