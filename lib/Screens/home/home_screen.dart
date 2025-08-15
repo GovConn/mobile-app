@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Components/floating_navbar.dart';
 import 'package:gov_connect_app/Screens/Appointment/appointment_service_screen.dart';
@@ -26,7 +25,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 _buildHeader(width, height, context),
                 SizedBox(height: height * 0.01),
-                _buildOngoingServicesCard(),
+                _buildOngoingServicesCard(height),
                 SizedBox(height: height * 0.025),
                 _buildServiceGrid(context),
                 SizedBox(height: height * 0.028),
@@ -71,10 +70,10 @@ class HomeScreen extends StatelessWidget {
                   shape: BoxShape.circle,              
                 ),
                 child: IconButton(
-                  icon: const Icon(
+                  icon:  Icon(
                     Icons.account_circle,
                     color: blackPrimary,
-                    size: 35,
+                    size: height * 0.0425,
                   ),
                   onPressed: () {
                     Navigator.push(
@@ -114,7 +113,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOngoingServicesCard() {
+  Widget _buildOngoingServicesCard(double height) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16.0),
@@ -149,7 +148,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 40),
+          SizedBox(height: height* 0.05),
           const Text(
             'No Ongoing Services',
             style: TextStyle(
@@ -157,7 +156,7 @@ class HomeScreen extends StatelessWidget {
               fontSize: 18,
             ),
           ),
-          const SizedBox(height: 60),
+          SizedBox(height: height * 0.075),
           GestureDetector(
             onTap: () {
               // Handle "View All" tap
@@ -177,6 +176,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildServiceGrid(BuildContext context) {
+     final height = MediaQuery.of(context).size.height;
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -186,6 +186,7 @@ class HomeScreen extends StatelessWidget {
       childAspectRatio: 1.05, // Adjust aspect ratio for card size
       children: [
         _buildServiceButton(
+          height: height,
           imagePath: 'assets/icons/schedule.png',
           label: 'Book an\nAppointment',
           onTap: () {
@@ -212,6 +213,7 @@ class HomeScreen extends StatelessWidget {
           },
         ),
         _buildServiceButton(
+          height: height,
           imagePath: 'assets/icons/services.png',
           label: 'E Services',
           onTap: () {
@@ -223,6 +225,7 @@ class HomeScreen extends StatelessWidget {
           },
         ),
         _buildServiceButton(
+          height: height,
           imagePath: 'assets/icons/Ai-logo.png',
           label: 'AI Assistant',
           onTap: () {
@@ -230,6 +233,7 @@ class HomeScreen extends StatelessWidget {
           },
         ),
         _buildServiceButton(
+          height: height,
           imagePath: 'assets/icons/coming-soon.png',
           label: 'Coming Soon',
           onTap: () {
@@ -245,6 +249,7 @@ class HomeScreen extends StatelessWidget {
     required String label,
     required String imagePath,
     required VoidCallback onTap,
+    required double height
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -266,10 +271,10 @@ class HomeScreen extends StatelessWidget {
           children: [
             Image.asset(
               imagePath,
-              width: 68,
-              height: 68,
+              width: height* 0.08,
+              height: height* 0.08,
             ),
-            const SizedBox(height: 15),
+            SizedBox(height: height * 0.02),
             Text(
               label,
               textAlign: TextAlign.center,
@@ -280,44 +285,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHistoryButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 4), // Shadow position
-            ),
-          ],
-        ),
-        child: OutlinedButton(
-          onPressed: () {},
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: blackPrimary, width: 1.5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            backgroundColor: blackPrimary,
-          ),
-          child: const Text(
-            'History',
-            style: TextStyle(
-              color: whitePrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
         ),
       ),
     );
