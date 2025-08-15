@@ -1,11 +1,11 @@
 import 'dart:developer';
-
+import 'dart:ffi';
 import 'package:flutter/material.dart';
+import 'package:gov_connect_app/Components/floating_navbar.dart';
 import 'package:gov_connect_app/Screens/Appointment/appointment_service_screen.dart';
 import 'package:gov_connect_app/Screens/login/login_screen.dart';
-import 'package:gov_connect_app/services/auth_service.dart';
+import 'package:gov_connect_app/Screens/profile/profile_screen.dart';
 import 'package:provider/provider.dart';
-
 import '../../providers/auth_provider.dart';
 import '../../theme/color_theme.dart';
 
@@ -20,16 +20,32 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding:
+                EdgeInsets.symmetric(horizontal: 20, vertical: height * 0.01),
             child: Column(
               children: [
                 _buildHeader(width, height, context),
-                const SizedBox(height: 30),
+                SizedBox(height: height * 0.01),
                 _buildOngoingServicesCard(),
-                const SizedBox(height: 20),
+                SizedBox(height: height * 0.025),
                 _buildServiceGrid(context),
-                const SizedBox(height: 30),
-                _buildHistoryButton(),
+                SizedBox(height: height * 0.028),
+                FloatingNavBar(
+                  currentIndex: 0,
+                  onTap: (index) {
+                    if (index == 0) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      );
+                    } else if (index == 1) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                      );
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -38,7 +54,8 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(double width, double height,BuildContext context) {
+  Widget _buildHeader(double width, double height, BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -47,28 +64,52 @@ class HomeScreen extends StatelessWidget {
           width: width * 0.35,
           fit: BoxFit.contain,
         ),
-        ElevatedButton(
-          onPressed: () {
-            final authProvider = Provider.of<AuthProvider>(context, listen: false);
-           authProvider.logout();
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
-          ),
-          child: const Text(
-            'Login',
-            style: TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-        ),
+        authProvider.isAuthenticated
+            ? Container(
+                decoration: const BoxDecoration(
+                  color: primaryColor, 
+                  shape: BoxShape.circle,              
+                ),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.account_circle,
+                    color: blackPrimary,
+                    size: 35,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ProfileScreen()),
+                    );
+                  },
+                ),
+              )
+            : ElevatedButton(
+                onPressed: () {
+                  authProvider.logout();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
+                ),
+                child: const Text(
+                  'Login',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14),
+                ),
+              )
       ],
     );
   }
@@ -109,7 +150,6 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 40),
-          // Main content of the card
           const Text(
             'No Ongoing Services',
             style: TextStyle(
@@ -136,7 +176,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Builds the 2x2 grid of service buttons
   Widget _buildServiceGrid(BuildContext context) {
     return GridView.count(
       crossAxisCount: 2,
@@ -149,14 +188,15 @@ class HomeScreen extends StatelessWidget {
         _buildServiceButton(
           imagePath: 'assets/icons/schedule.png',
           label: 'Book an\nAppointment',
-          onTap: ()  {
+          onTap: () {
             final authProvider =
                 Provider.of<AuthProvider>(context, listen: false);
-                authProvider.loadToken().then((_) async {
-                if (authProvider.token == null) {
-     debugPrint("No token");
-    }
-    log("Token: ${authProvider.token}");});
+            authProvider.loadToken().then((_) async {
+              if (authProvider.token == null) {
+                debugPrint("No token");
+              }
+              log("Token: ${authProvider.token}");
+            });
             if (authProvider.status == AuthStatus.Authenticated) {
               Navigator.push(
                 context,
