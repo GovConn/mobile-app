@@ -44,3 +44,9 @@ app.*.map.json
 /android/app/release
 
 /test/
+
+# FVM Version Cache
+.fvm/
+
+.vscode/*
+!.vscode/launch.json
