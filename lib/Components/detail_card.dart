@@ -27,9 +27,10 @@ class DetailCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: Colors.grey.shade400),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withOpacity(1),
               spreadRadius: 2,
               blurRadius: 5,
               offset: const Offset(0, 3),
@@ -41,7 +42,8 @@ class DetailCard extends StatelessWidget {
             Icon(
               iconData,
               size: 32,
-              color: iconColor ?? primaryColorIcon, // Default to primaryColor
+              color: iconColor ??
+                  primaryColorIcon, // Explicitly use accentOrange as default
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -69,8 +71,6 @@ class DetailCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (onTap != null) // Add arrow if tappable
-              const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
           ],
         ),
       ),

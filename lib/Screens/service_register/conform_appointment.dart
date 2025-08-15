@@ -8,14 +8,15 @@ import '../../Components/doc_uploadFiled.dart';
 import '../../Components/searchBarField.dart';
 import '../../Components/staus_message_card.dart';
 
-class PlaceAppointmentScreen extends StatefulWidget {
-  const PlaceAppointmentScreen({Key? key}) : super(key: key);
+class ConformAppointmentScreen extends StatefulWidget {
+  const ConformAppointmentScreen({Key? key}) : super(key: key);
 
   @override
-  State<PlaceAppointmentScreen> createState() => _PlaceAppointmentScreenState();
+  State<ConformAppointmentScreen> createState() =>
+      _ConformAppointmentScreenState();
 }
 
-class _PlaceAppointmentScreenState extends State<PlaceAppointmentScreen> {
+class _ConformAppointmentScreenState extends State<ConformAppointmentScreen> {
   bool isUploaded = false;
 
   @override
@@ -37,7 +38,7 @@ class _PlaceAppointmentScreenState extends State<PlaceAppointmentScreen> {
             child: const Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Place Appointment',
+                'Confirmation',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -50,7 +51,7 @@ class _PlaceAppointmentScreenState extends State<PlaceAppointmentScreen> {
             padding: EdgeInsets.symmetric(horizontal: 20.0),
             child: Divider(color: Colors.grey),
           ),
-          SizedBox(height: height * 0.03),
+          SizedBox(height: height * 0.01),
           DetailCard(
             iconData:
                 Icons.people_alt, // Or a custom icon representing municipality
@@ -62,12 +63,47 @@ class _PlaceAppointmentScreenState extends State<PlaceAppointmentScreen> {
               // Navigate to details or select this office
             },
           ),
-          SizedBox(height: height * 0.02),
-          SearchBarField(
-            hintText: 'Select Place',
+          SizedBox(height: height * 0.005),
+          DetailCard(
+            iconData: Icons
+                .location_pin, // Or a custom icon representing municipality
+            title: 'Karapitiya Teaching Hospital',
+
             onTap: () {
-              print('Select Place search bar tapped!');
-              // Open a location picker or search results
+              print('Municipal Council card tapped!');
+              // Navigate to details or select this office
+            },
+          ),
+          SizedBox(height: height * 0.005),
+          DetailCard(
+            iconData: Icons
+                .check_circle_outline_rounded, // Or a custom icon representing municipality
+            title: 'Doctor Channeling',
+            onTap: () {
+              print('Municipal Council card tapped!');
+              // Navigate to details or select this office
+            },
+          ),
+          SizedBox(height: height * 0.005),
+          DetailCard(
+            iconData: Icons
+                .date_range_outlined, // Or a custom icon representing municipality
+            title: 'August 9, 2025',
+
+            onTap: () {
+              print('Municipal Council card tapped!');
+              // Navigate to details or select this office
+            },
+          ),
+          SizedBox(height: height * 0.005),
+          DetailCard(
+            iconData: Icons
+                .access_time_rounded, // Or a custom icon representing municipality
+            title: '16:30 P.M',
+
+            onTap: () {
+              print('Municipal Council card tapped!');
+              // Navigate to details or select this office
             },
           ),
           SizedBox(height: height * 0.04),
@@ -75,7 +111,7 @@ class _PlaceAppointmentScreenState extends State<PlaceAppointmentScreen> {
       ),
 
       actionButtonText:
-          'Select Date & Time', // Text for the bottom action button
+          'Confirm Appointment', // Text for the bottom action button
       onActionButtonPressed: () {
         // Handle action button press
         print('Action button pressed!');
