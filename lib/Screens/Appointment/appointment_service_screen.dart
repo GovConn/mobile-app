@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:gov_connect_app/Components/toast_message.dart';
 import 'package:gov_connect_app/Screens/Appointment/appointment_details_screen.dart';
 import 'package:gov_connect_app/models/service_model.dart';
@@ -75,7 +76,18 @@ class _AppointmentServicesScreenState extends State<AppointmentServicesScreen> {
               child: Consumer<ServiceProvider>(
                 builder: (context, serviceProvider, child) {
                   if (serviceProvider.state == NotifierState.loading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SpinKitSpinningLines(
+                          color: primaryColor,
+                          size: 72.0,
+                        ),
+                        SizedBox(height: 16),
+                        Text('Loading Services...',style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600),),
+                         SizedBox(height: 40),
+                      ],
+                    ));
                   }
                   if (serviceProvider.state == NotifierState.error) {
                     return Center(
