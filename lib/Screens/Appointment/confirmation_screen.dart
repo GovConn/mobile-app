@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Screens/Appointment/pending_screen.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
@@ -21,7 +22,7 @@ class ConfirmationScreen extends StatelessWidget {
     final endTime = requestBody?["end_time"];
     final service = appointmentProvider.selectedService?.serviceNameEn ?? "N/A";
     final office = appointmentProvider.selectedOffice?.nameEn ?? "N/A";
-    final username = authProvider.user?.firstName ?? "Guest";
+    final username = authProvider.user?.firstName ?? "nirman";
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -114,9 +115,10 @@ class ConfirmationScreen extends StatelessWidget {
                 onPressed: () async {
                   final appointmentProvider =
                       Provider.of<AppointmentProvider>(context, listen: false);
-                  final authProvider = Provider.of<AuthProvider>(context,listen: false);
+                  final authProvider =
+                      Provider.of<AuthProvider>(context, listen: false);
                   await authProvider.fetchUser();
-                  final citizenNic = authProvider.user?.nic; 
+                  final citizenNic = authProvider.user?.nic;
                   final slotId = appointmentProvider.selectedSlot!.slotId;
 
                   final success = await appointmentProvider.createAppointment(
@@ -127,10 +129,19 @@ class ConfirmationScreen extends StatelessWidget {
                       const SnackBar(
                           content: Text("Appointment created successfully")),
                     );
-                   Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PendingScreen()),
-                  );
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PendingScreen(
+                            // Pass the details to the success screen
+                            bookingDate: DateFormat('MMMM dd, yyyy')
+                                .format(DateTime.parse(bookingDate)),
+                            startTime: startTime,
+                            endTime: endTime,
+                            service: service,
+                            office: office,
+                          ),
+                        ));
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

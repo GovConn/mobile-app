@@ -78,11 +78,11 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                     ? () {
                         // Here you would submit the _uploadedDocumentUrls map to your final API endpoint
                         print("All documents uploaded: $_uploadedDocumentUrls");
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PendingScreen()),
-                          (Route<dynamic> route) => false,
-                        );
+                        // Navigator.pushAndRemoveUntil(
+                        //   context,
+                        //   MaterialPageRoute(builder: (context) => const PendingScreen()),
+                        //   (Route<dynamic> route) => false,
+                        // );
                       }
                     : null, // Button is disabled if not all documents are uploaded
                 style: ElevatedButton.styleFrom(

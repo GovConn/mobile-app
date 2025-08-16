@@ -1,7 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Components/toast_message.dart';
-import 'package:gov_connect_app/Screens/Appointment/appointment_doc_upload_screen.dart';
 import 'package:gov_connect_app/Screens/Appointment/resrevation_screen.dart';
 import 'package:gov_connect_app/providers/appointment_provider.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
@@ -28,205 +27,245 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     });
   }
 
+  List<String> parseDescription(String description) {
+    final regex = RegExp(r'\d+\)');
+    final parts = description.split(regex);
+
+    return parts.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leadingWidth: 100,
-        leading: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            const Text(
-              'Back',
-              style: TextStyle(color: Colors.black, fontSize: 16),
-            ),
-          ],
-        ),
+  final height = MediaQuery.of(context).size.height;
+  return Scaffold(
+    backgroundColor: Colors.white,
+    appBar: AppBar(
+      backgroundColor: whitePrimary,
+      surfaceTintColor: whitePrimary,
+      elevation: 0,
+      leadingWidth: 100,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          const Text(
+            'Back',
+            style: TextStyle(color: Colors.black, fontSize: 16),
+          ),
+        ],
       ),
-      body: Padding(
-        padding:
-            EdgeInsets.symmetric(horizontal: 20.0, vertical: height * 0.02),
-        child: Consumer<AppointmentProvider>(
-          builder: (context, appointmentProvider, child) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Center(
-                  child: Text(
-                    'Appointments',
-                    style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black),
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Location Dropdown
-                _buildOfficeDropdown(appointmentProvider),
-                const SizedBox(height: 24),
-
-                // Purpose Dropdown
-                _buildServiceDropdown(appointmentProvider),
-                const SizedBox(height: 24),
-
-                const Text(
-                  'Important Instructions Before Reservation',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                _buildInstructionItem('1',
-                    'You need to change your default password to a more secure one.'),
-                _buildInstructionItem('2',
-                    'Keep this password secured and do not share it with anyone.'),
-                _buildInstructionItem(
-                    '3', 'Bring all necessary documents to your appointment.'),
-                const Spacer(),
-                SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (appointmentProvider.selectedOffice != null &&
-                            appointmentProvider.selectedService != null) {
-                          final service = appointmentProvider.selectedService!;
-
-                          if (service.requiredDocumentTypes.isEmpty) {
-                            // No required documents → go directly to Reservation screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ReservationScreen(),
-                              ),
-                            );
-                          } else {
-                            // Documents required → go to Document Upload screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const AppointmentDocUplaodScreen(),
-                              ),
-                            );
-                          }
-                        } else {
-                          // Show toast when button is pressed but conditions aren't met
-                          ToastMessage.showInfo(context,
-                              'Please select both office and service first');
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            primaryColor, // Single color for all states
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+    ),
+    body: Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: height * 0.02),
+      child: Consumer<AppointmentProvider>(
+        builder: (context, appointmentProvider, child) {
+          return Column(
+            children: [
+              // ---------- Scrollable Section ----------
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Center(
+                        child: Text(
+                          'Appointments',
+                          style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black),
                         ),
                       ),
-                      child: const Text(
-                        'Next',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(height: 32),
+
+                      // Location Dropdown
+                      _buildOfficeDropdown(appointmentProvider),
+                      const SizedBox(height: 24),
+
+                      // Purpose Dropdown
+                      _buildServiceDropdown(appointmentProvider),
+                      const SizedBox(height: 24),
+
+                      // Instructions / Service Description Section
+                      if (appointmentProvider.selectedService != null) ...[
+                        const Text(
+                          'Service Description',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
                         ),
-                      ),
-                    )),
-
-                const SizedBox(height: 20),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-Widget _buildOfficeDropdown(AppointmentProvider provider) {
-  if (provider.officeState == NotifierState.loading) {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: primaryColor,
-        strokeWidth: 2,
-      ),
-    );
-  }
-  if (provider.officeState == NotifierState.error) {
-    return Center(child: Text('Error: ${provider.errorMessage}'));
-  }
-
-  // Ensure selectedOffice exists in the offices list
-  final validSelectedOffice = provider.offices.contains(provider.selectedOffice) 
-      ? provider.selectedOffice 
-      : null;
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text('Select office location', style: TextStyle(color: Colors.grey[600])),
-      const SizedBox(height: 8),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[400]!),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton2<Office>(
-            value: validSelectedOffice,
-            hint: const Text('Select an Office'),
-            isExpanded: true,
-            items: provider.offices.map((office) {
-              return DropdownMenuItem<Office>(
-                value: office,
-                child: SizedBox(
-                  height: 70,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      office.nameEn,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      '${office.descriptionEn} - ${office.location}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
+                        const SizedBox(height: 16),
+                        ...parseDescription(
+                                appointmentProvider.selectedService!
+                                    .descriptionEn)
+                            .asMap()
+                            .entries
+                            .map((entry) => _buildInstructionItem(
+                                  (entry.key + 1).toString(),
+                                  entry.value,
+                                ))
+                            .toList(),
+                      ] else ...[
+                        const Text(
+                          'Important Instructions Before Reservation',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildInstructionItem('1',
+                            'You need to change your default password to a more secure one.'),
+                        _buildInstructionItem('2',
+                            'Keep this password secured and do not share it with anyone.'),
+                        _buildInstructionItem('3',
+                            'Bring all necessary documents to your appointment.'),
+                      ],
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
-              );
-            }).toList(),
-            onChanged: (Office? newValue) {
-              provider.selectOffice(newValue);
-            },
-            dropdownStyleData: DropdownStyleData(
-              maxHeight: 300,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
-            ),
-            menuItemStyleData: const MenuItemStyleData(
-              height: 55,
+  
+              // ---------- Fixed Button Section ----------
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (appointmentProvider.selectedOffice != null &&
+                        appointmentProvider.selectedService != null) {
+                      final service = appointmentProvider.selectedService!;
+
+                      if (service.requiredDocumentTypes.isEmpty) {
+                        // No required documents → go directly to Reservation screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ReservationScreen(),
+                          ),
+                        );
+                      } else {
+                        // Documents required → go to Document Upload screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ReservationScreen(),
+                          ),
+                        );
+                      }
+                    } else {
+                      ToastMessage.showInfo(
+                          context, 'Please select both office and service first');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Next',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          );
+        },
+      ),
+    ),
+  );
+}
+
+
+  Widget _buildOfficeDropdown(AppointmentProvider provider) {
+    if (provider.officeState == NotifierState.loading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: primaryColor,
+          strokeWidth: 2,
+        ),
+      );
+    }
+    if (provider.officeState == NotifierState.error) {
+      return Center(child: Text('Error: ${provider.errorMessage}'));
+    }
+
+    // Ensure selectedOffice exists in the offices list
+    final validSelectedOffice =
+        provider.offices.contains(provider.selectedOffice)
+            ? provider.selectedOffice
+            : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Select office location',
+            style: TextStyle(color: Colors.grey[600])),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[400]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton2<Office>(
+              value: validSelectedOffice,
+              hint: const Text('Select an Office'),
+              isExpanded: true,
+              items: provider.offices.map((office) {
+                return DropdownMenuItem<Office>(
+                  value: office,
+                  child: SizedBox(
+                    height: 70,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        office.nameEn,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        '${office.descriptionEn} - ${office.location}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (Office? newValue) {
+                provider.selectOffice(newValue);
+              },
+              dropdownStyleData: DropdownStyleData(
+                maxHeight: 300,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+              menuItemStyleData: const MenuItemStyleData(
+                height: 55,
+              ),
             ),
           ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
+
   Widget _buildServiceDropdown(AppointmentProvider provider) {
     bool isOfficeSelected = provider.selectedOffice != null;
 

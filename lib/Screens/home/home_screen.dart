@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Components/floating_navbar.dart';
 import 'package:gov_connect_app/Screens/Appointment/appointment_service_screen.dart';
@@ -196,7 +195,6 @@ class HomeScreen extends StatelessWidget {
               if (authProvider.token == null) {
                 debugPrint("No token");
               }
-              log("Token: ${authProvider.token}");
             });
             if (authProvider.status == AuthStatus.Authenticated) {
               Navigator.push(
