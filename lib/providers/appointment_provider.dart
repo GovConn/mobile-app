@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/models/office_service_model.dart';
 import 'package:gov_connect_app/services/office_api_service.dart';
+import 'package:intl/intl.dart';
 import '../models/appointment_slot_model.dart';
 import '../models/office_model.dart';
 
@@ -17,11 +18,16 @@ class AppointmentProvider with ChangeNotifier {
   GovService? _selectedService;
   DateTime _selectedDate = DateTime.now();
   AppointmentSlot? _selectedSlot;
+  Map<String, dynamic>? _slotRequestBody;
 
   NotifierState _officeState = NotifierState.initial;
   NotifierState _serviceState = NotifierState.initial;
   NotifierState _slotState = NotifierState.initial;
   String _errorMessage = '';
+  Map<String, dynamic>? get slotRequestBody => _slotRequestBody;
+  bool isSlotCreating = false;
+  bool isCreateAppointmentLoading = false;
+  bool appointmentSuccess = false;
 
   List<Office> get offices => _offices;
   List<GovService> get services => _services;
@@ -119,21 +125,74 @@ class AppointmentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, dynamic> buildCreateSlotBody() {
+Map<String, dynamic> buildCreateSlotBody() {
     if (selectedService == null) {
       throw Exception("Service must be selected before creating slot");
     }
 
-    return {
-      "booking_date": "2025-08-09", // Replace with actual selected date
-      "start_time": "2025-08-09T07:00:00Z", // Replace dynamically
-      "end_time": "2025-08-09T08:00:00Z", // Replace dynamically
-      "max_capacity": 10,
-      "reservation_id": selectedService!.serviceId, // 👈 service_id here
-      "reserved_count": 5,
-      "status": "available",
+    if (_selectedSlot == null) {
+      throw Exception("Time slot must be selected before creating reservation");
+    }
+
+    final selectedSlot = _selectedSlot!;
+    final bookingDateStr = DateFormat('yyyy-MM-dd').format(selectedSlot.bookingDate);
+
+    String formatTimeOfDay(TimeOfDay tod) {
+      final now = DateTime.now();
+      final dt = DateTime(now.year, now.month, now.day, tod.hour, tod.minute);
+      return DateFormat('HH:mm').format(dt);
+    }
+
+    _slotRequestBody = {
+      "booking_date": bookingDateStr,
+      "start_time": formatTimeOfDay(selectedSlot.startTime),
+      "end_time": formatTimeOfDay(selectedSlot.endTime),
+      "max_capacity": selectedSlot.maxCapacity,
+      "reservation_id": selectedService!.serviceId,
+      "reserved_count": selectedSlot.reservedCount + 1,
+      "status": _calculateNewStatus(selectedSlot),
     };
+
+    notifyListeners();
+    return _slotRequestBody!;
   }
+
+
+  Map<String, dynamic> getRequestBody() {
+    if (_slotRequestBody == null) {
+      throw Exception("Request body not built yet");
+    }
+    return _slotRequestBody!;
+  }
+
+  void clearRequestBody() {
+    _slotRequestBody = null;
+    notifyListeners();
+  }
+
+  Future<bool> createAppointment(String citizenNic, int slotId) async {
+    isCreateAppointmentLoading = true;
+    notifyListeners();
+
+    try {
+      final success = await _apiService.createAppointment(citizenNic, slotId);
+      appointmentSuccess = success;
+      return success;
+    } finally {
+      isCreateAppointmentLoading = false;
+      notifyListeners();
+    }
+  }
+
+
+String _calculateNewStatus(AppointmentSlot slot) {
+  // Update status if capacity is reached
+  if (slot.reservedCount + 1 >= slot.maxCapacity) {
+    return 'full';
+  }
+  return slot.status;
+}
+
 
   void _resetSlotSelection() {
     _slots = [];

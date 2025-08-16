@@ -147,82 +147,86 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     );
   }
 
-  Widget _buildOfficeDropdown(AppointmentProvider provider) {
-    if (provider.officeState == NotifierState.loading) {
-      return const Center(
-          child: CircularProgressIndicator(
+Widget _buildOfficeDropdown(AppointmentProvider provider) {
+  if (provider.officeState == NotifierState.loading) {
+    return const Center(
+      child: CircularProgressIndicator(
         color: primaryColor,
         strokeWidth: 2,
-      ));
-    }
-    if (provider.officeState == NotifierState.error) {
-      return Center(child: Text('Error: ${provider.errorMessage}'));
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Select office location',
-            style: TextStyle(color: Colors.grey[600])),
-        const SizedBox(height: 8),
-        Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[400]!),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton2<Office>(
-                value: provider.selectedOffice,
-                hint: const Text('Select an Office'),
-                isExpanded: true,
-                items: provider.offices.map((office) {
-                  return DropdownMenuItem<Office>(
-                    value: office,
-                    child: SizedBox(
-                      height: 70,
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          office.nameEn,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${office.descriptionEn} - ${office.location}',
-                          style:
-                              TextStyle(color: Colors.grey[600], fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (Office? newValue) {
-                  provider.selectOffice(newValue);
-                },
-                dropdownStyleData: DropdownStyleData(
-                  maxHeight: 300,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                ),
-                menuItemStyleData: const MenuItemStyleData(
-                  height: 55,
-                ),
-              ),
-            )),
-      ],
+      ),
     );
   }
+  if (provider.officeState == NotifierState.error) {
+    return Center(child: Text('Error: ${provider.errorMessage}'));
+  }
 
+  // Ensure selectedOffice exists in the offices list
+  final validSelectedOffice = provider.offices.contains(provider.selectedOffice) 
+      ? provider.selectedOffice 
+      : null;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('Select office location', style: TextStyle(color: Colors.grey[600])),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[400]!),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton2<Office>(
+            value: validSelectedOffice,
+            hint: const Text('Select an Office'),
+            isExpanded: true,
+            items: provider.offices.map((office) {
+              return DropdownMenuItem<Office>(
+                value: office,
+                child: SizedBox(
+                  height: 70,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      office.nameEn,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      '${office.descriptionEn} - ${office.location}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (Office? newValue) {
+              provider.selectOffice(newValue);
+            },
+            dropdownStyleData: DropdownStyleData(
+              maxHeight: 300,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+            menuItemStyleData: const MenuItemStyleData(
+              height: 55,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
   Widget _buildServiceDropdown(AppointmentProvider provider) {
     bool isOfficeSelected = provider.selectedOffice != null;
 
