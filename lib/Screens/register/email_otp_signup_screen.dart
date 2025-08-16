@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Components/custom_button.dart';
 import 'package:gov_connect_app/Components/logo_banner.dart';
@@ -50,31 +52,36 @@ class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
     return _otpSent && _otpControllers.every((controller) => controller.text.isNotEmpty);
   }
 
-  void _sendOtp() {
-    final email = _emailController.text.trim();
-    
-    if (email.isEmpty) {
-      setState(() => _emailError = 'Email cannot be empty');
-      ToastMessage.showError(context,'Please enter your email');
-      return;
-    }
-    
-    if (!_isValidEmail(email)) {
-      setState(() => _emailError = 'Enter a valid email address');
-      ToastMessage.showError(context,'Please enter a valid email');
-      return;
-    }
-
-    Provider.of<RegistrationProvider>(context, listen: false).setEmail(email);
-    
-    final randomOtp = List.generate(5, (index) => (index + 1).toString()).join();
-    for (int i = 0; i < 5; i++) {
-      _otpControllers[i].text = randomOtp[i];
-    }
-
-    setState(() => _otpSent = true);
-    ToastMessage.showSuccess(context,'OTP sent to your email');
+ void _sendOtp() {
+  final email = _emailController.text.trim();
+  
+  if (email.isEmpty) {
+    setState(() => _emailError = 'Email cannot be empty');
+    ToastMessage.showError(context,'Please enter your email');
+    return;
   }
+  
+  if (!_isValidEmail(email)) {
+    setState(() => _emailError = 'Enter a valid email address');
+    ToastMessage.showError(context,'Please enter a valid email');
+    return;
+  }
+
+  Provider.of<RegistrationProvider>(context, listen: false).setEmail(email);
+  
+  // Generate random 5-digit OTP
+  final random = Random();
+  final randomOtp = List.generate(5, (index) => random.nextInt(10).toString()).join();
+  
+  for (int i = 0; i < 5; i++) {
+    _otpControllers[i].text = randomOtp[i];
+    if (i < 4) {
+      FocusScope.of(context).nextFocus();
+    }
+  }
+  setState(() => _otpSent = true);
+  ToastMessage.showSuccess(context,'OTP sent to your email');
+}
 
   void _verifyEmail() {
     final registrationProvider = Provider.of<RegistrationProvider>(context, listen: false);
@@ -203,7 +210,7 @@ class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
               5,
-              (index) => OTPBox(context: context),
+              (index) => OTPBox(context: context,controller: _otpControllers[index],),
             ),
           ),
         ),

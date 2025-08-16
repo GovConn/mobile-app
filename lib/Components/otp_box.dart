@@ -19,8 +19,9 @@ class OTPBox extends StatelessWidget {
     width: 45,
     height: 50,
     child: TextField(
+      controller: controller,
       maxLength: 1, 
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.none,
       textAlign: TextAlign.center,
       style: const TextStyle(color: blackPrimary, fontSize: 20),
       decoration: InputDecoration(
