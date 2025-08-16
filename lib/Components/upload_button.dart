@@ -5,7 +5,7 @@ import '../theme/color_theme.dart';
 class UploadButton extends StatelessWidget {
   const UploadButton({
     super.key,
-    required this.label,
+    required this.label, required Null Function(dynamic url) onUploadSuccess, required bool isCompleted,
   });
 
   final String label;

@@ -1,6 +1,11 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:gov_connect_app/Screens/Appointment/confirmation_screen.dart';
+import 'package:gov_connect_app/providers/appointment_provider.dart';
+import 'package:gov_connect_app/theme/color_theme.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 
 class ReservationScreen extends StatefulWidget {
   const ReservationScreen({super.key});
@@ -14,42 +19,32 @@ class _ReservationScreenState extends State<ReservationScreen> {
   DateTime? _selectedDay;
   int _selectedTimeIndex = 1;
 
-  final Map<DateTime, int> _availableSlots = {
-    // A map to simulate available slots per day
-    DateTime.now().add(const Duration(days: 2)): 15,
-    DateTime.now().add(const Duration(days: 3)): 10,
-    DateTime.now().add(const Duration(days: 5)): 20,
-    DateTime.now().add(const Duration(days: 10)): 5,
-  };
-
-  final List<String> _timeSlots = [
-    '8.30 AM - 9.00 AM',
-    '9.00 AM - 9.30 AM',
-    '9.30 AM - 10.00 AM',
-    '10.00 AM - 10.30 AM',
-    '10.30 AM - 11.00 AM',
-    '11.00 AM - 11.30 AM',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
     _selectedDay = _focusedDay;
-  }
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final appointmentProvider =
+        Provider.of<AppointmentProvider>(context, listen: false);
+    appointmentProvider.getAvailableSlots();
+    
+  });
+}
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 16),
-              // Back button
+              SizedBox(height: height*0.01),
               Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -59,7 +54,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       style: TextStyle(color: Colors.black, fontSize: 16)),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: height * 0.01),
               const Text(
                 'Reservation',
                 style: TextStyle(
@@ -67,14 +62,14 @@ class _ReservationScreenState extends State<ReservationScreen> {
                     fontWeight: FontWeight.bold,
                     color: Colors.black),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: height * 0.0075),
               const Text(
                 'Reserve the date and time',
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: height * 0.02),
               _buildCalendarHeader(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _buildCalendar(),
               const SizedBox(height: 24),
               const Text(
@@ -88,13 +83,21 @@ class _ReservationScreenState extends State<ReservationScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Handle Next button press
+                  final appointmentProvider =
+        Provider.of<AppointmentProvider>(context, listen: false);
+                    final requestBody = appointmentProvider.buildCreateSlotBody();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ConfirmationScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber[600],
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(30)),
                   ),
                   child: const Text('Next',
                       style: TextStyle(
@@ -110,7 +113,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
 
   Widget _buildCalendarHeader() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Row(
           children: [
@@ -140,7 +143,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
         ),
         Row(
           children: [
-            _buildLegendItem(Colors.amber, 'Available'),
+            _buildLegendItem(primaryColor, 'Available'),
             const SizedBox(width: 16),
             _buildLegendItem(Colors.grey[300]!, 'Filled'),
           ],
@@ -168,6 +171,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
         return isSameDay(_selectedDay, day);
       },
       onDaySelected: (selectedDay, focusedDay) {
+        final appointmentProvider =
+            Provider.of<AppointmentProvider>(context, listen: false);
+
+        appointmentProvider.selectDate(selectedDay);
         setState(() {
           _selectedDay = selectedDay;
           _focusedDay = focusedDay;
@@ -183,7 +190,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
           borderRadius: BorderRadius.circular(8),
         ),
         outsideDaysVisible: false,
-        markerDecoration: BoxDecoration(
+        markerDecoration: const BoxDecoration(
           color: Colors.amber,
           shape: BoxShape.circle,
         ),
@@ -195,14 +202,27 @@ class _ReservationScreenState extends State<ReservationScreen> {
       ),
       calendarBuilders: CalendarBuilders(
         defaultBuilder: (context, day, focusedDay) {
-          final isPastDay = day.isBefore(
-              DateTime.now().subtract(const Duration(hours: 24)));
-          final availableSlots = _availableSlots[
-              DateTime(day.year, day.month, day.day, 0, 0, 0)];
-          final bool hasSlots = availableSlots != null && availableSlots > 0;
+          final isPastDay =
+              day.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+
+          final appointmentProvider =
+              Provider.of<AppointmentProvider>(context, listen: false);
+
+          // Check if there are slots on this date
+          final hasSlots = appointmentProvider.slots.any(
+            (slot) =>
+                slot.bookingDate.year == day.year &&
+                slot.bookingDate.month == day.month &&
+                slot.bookingDate.day == day.day,
+          );
+
           return GestureDetector(
             onTap: () {
               if (!isPastDay) {
+                final appointmentProvider =
+                    Provider.of<AppointmentProvider>(context, listen: false);
+                appointmentProvider
+                    .selectDate(day); // this handles slots + reset
                 setState(() {
                   _selectedDay = day;
                   _focusedDay = focusedDay;
@@ -216,9 +236,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                     ? Colors.amber[600]
                     : (isPastDay
                         ? Colors.grey[100]
-                        : (hasSlots
-                            ? Colors.amber[100]
-                            : Colors.grey[300])),
+                        : (hasSlots ? Colors.amber[100] : Colors.grey[300])),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -256,8 +274,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
           );
         },
         todayBuilder: (context, day, focusedDay) {
-          final isPastDay = day.isBefore(
-              DateTime.now().subtract(const Duration(hours: 24)));
+          final isPastDay =
+              day.isBefore(DateTime.now().subtract(const Duration(hours: 24)));
           return GestureDetector(
             onTap: () {
               if (!isPastDay) {
@@ -298,67 +316,205 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildTimeSlotsGrid() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: List.generate(_timeSlots.length, (index) {
-        final time = _timeSlots[index];
-        final isSelected = _selectedTimeIndex == index;
-        final isUnavailable = index == 3; // Example of an unavailable slot
-        final count = 11 - index; // Dynamic count example
-
-        return GestureDetector(
-          onTap: isUnavailable
-              ? null
-              : () => setState(() => _selectedTimeIndex = index),
-          child: Card(
-            elevation: 0,
-            color: isSelected
-                ? Colors.amber[600]
-                : (isUnavailable ? Colors.red[100] : Colors.white),
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                  color: isSelected
-                      ? Colors.amber[600]!
-                      : (isUnavailable
-                          ? Colors.red[100]!
-                          : Colors.grey[300]!),
-                  width: 1),
-              borderRadius: BorderRadius.circular(8),
-            ),
+ Widget _buildTimeSlotsGrid() {
+    return Consumer<AppointmentProvider>(
+      builder: (context, appointmentProvider, child) {
+        // Handle loading state
+        if (appointmentProvider.slotState == NotifierState.loading) {
+          return const Center(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    time,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isSelected ? Colors.white : Colors.black,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Available: $count',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isSelected ? Colors.white70 : Colors.black54,
-                    ),
-                  ),
-                ],
+              padding: EdgeInsets.all(24.0),
+              child: SpinKitFadingCircle(
+                color: primaryColor,
+                size: 30.0,
               ),
             ),
-          ),
+          );
+        }
+
+        // Handle error state
+        if (appointmentProvider.slotState == NotifierState.error) {
+          return Center(
+            child: Column(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 36),
+                const SizedBox(height: 8),
+                Text(
+                  appointmentProvider.errorMessage,
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => appointmentProvider.getAvailableSlots(),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Handle empty state
+        if (appointmentProvider.slots.isEmpty) {
+          return const Center(
+            child: Column(
+              children: [
+                Icon(Icons.schedule, color: Colors.grey, size: 36),
+                SizedBox(height: 8),
+                Text(
+                  'No slots available for this date',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Display available slots
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: List.generate(appointmentProvider.slots.length, (index) {
+            final slot = appointmentProvider.slots[index];
+            final isSelected = _selectedTimeIndex == index;
+            appointmentProvider.selectSlot(slot); 
+            final dateStr = DateFormat('yyyy-MM-dd').format(slot.bookingDate)  ;      
+
+            return GestureDetector(
+              onTap: () => setState(() => _selectedTimeIndex = index),
+              child: AnimatedContainer(
+                width: double.infinity,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                child: Card(
+                  surfaceTintColor: isSelected ? primaryColorLight : greyTextColor.withOpacity(0.5),
+                  elevation: isSelected ? 4 : 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: isSelected ? primaryColor : Colors.grey[300]!,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  color:  Colors.white,
+                  child: Container(
+                    width: 180,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Date display
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: isSelected ? primaryColor : Colors.grey[600],
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  dateStr,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected ? primaryColor : Colors.grey[800],
+                                  ),
+                                ),
+                                
+                              ],
+                            ),
+                             Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(slot.status),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            slot.status.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Time slot
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? primaryColor : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? primaryColor : Colors.grey[200]!,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              slot.displayLabel,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: isSelected ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Capacity indicator
+                        LinearProgressIndicator(
+                          value: slot.maxCapacity > 0
+                              ? slot.reservedCount / slot.maxCapacity
+                              : 0,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            slot.reservedCount >= slot.maxCapacity
+                                ? Colors.red[400]!
+                                : isSelected ? primaryColor : primaryColor,
+                          ),
+                          minHeight: 6,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${slot.reservedCount} of ${slot.maxCapacity} slots',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isSelected ? primaryColor : Colors.grey[600],
+                          ),
+                        ),                       
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
         );
-      }),
+      },
     );
   }
-}
 
+   Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'available':
+        return Colors.green;
+      case 'full':
+        return Colors.orange;
+      case 'closed':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+}
 extension on DateTime {
   String get monthName {
     final months = [

@@ -7,9 +7,11 @@ class OTPBox extends StatelessWidget {
   const OTPBox({
     super.key,
     required this.context,
+    this.controller
   });
 
   final BuildContext context;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +19,9 @@ class OTPBox extends StatelessWidget {
     width: 45,
     height: 50,
     child: TextField(
+      controller: controller,
       maxLength: 1, 
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.none,
       textAlign: TextAlign.center,
       style: const TextStyle(color: blackPrimary, fontSize: 20),
       decoration: InputDecoration(

@@ -1,8 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:gov_connect_app/Components/custom_button.dart';
 import 'package:gov_connect_app/Components/logo_banner.dart';
 import 'package:gov_connect_app/Components/otp_box.dart';
+import 'package:gov_connect_app/Components/toast_message.dart';
+import 'package:gov_connect_app/Screens/register/phone_otp_signup_screen.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/register_provider.dart';
 
 class EmailOTPSignupScreen extends StatefulWidget {
   const EmailOTPSignupScreen({super.key});
@@ -12,6 +19,98 @@ class EmailOTPSignupScreen extends StatefulWidget {
 }
 
 class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
+   final TextEditingController _emailController = TextEditingController();
+  final List<TextEditingController> _otpControllers = List.generate(5, (index) => TextEditingController());
+  bool _otpSent = false;
+  String? _emailError;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_validateEmail);
+  }
+
+  void _validateEmail() {
+    final email = _emailController.text.trim();
+    setState(() {
+      if (email.isEmpty) {
+        _emailError = null;
+      } else if (!_isValidEmail(email)) {
+        _emailError = 'Enter a valid email address';
+      } else {
+        _emailError = null;
+      }
+    });
+  }
+
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    return emailRegex.hasMatch(email);
+  }
+
+  bool _isOtpComplete() {
+    return _otpSent && _otpControllers.every((controller) => controller.text.isNotEmpty);
+  }
+
+ void _sendOtp() {
+  final email = _emailController.text.trim();
+  
+  if (email.isEmpty) {
+    setState(() => _emailError = 'Email cannot be empty');
+    ToastMessage.showError(context,'Please enter your email');
+    return;
+  }
+  
+  if (!_isValidEmail(email)) {
+    setState(() => _emailError = 'Enter a valid email address');
+    ToastMessage.showError(context,'Please enter a valid email');
+    return;
+  }
+
+  Provider.of<RegistrationProvider>(context, listen: false).setEmail(email);
+  
+  // Generate random 5-digit OTP
+  final random = Random();
+  final randomOtp = List.generate(5, (index) => random.nextInt(10).toString()).join();
+  
+  for (int i = 0; i < 5; i++) {
+    _otpControllers[i].text = randomOtp[i];
+    if (i < 4) {
+      FocusScope.of(context).nextFocus();
+    }
+  }
+  setState(() => _otpSent = true);
+  ToastMessage.showSuccess(context,'OTP sent to your email');
+}
+
+  void _verifyEmail() {
+    final registrationProvider = Provider.of<RegistrationProvider>(context, listen: false);
+    if (!_otpSent) {
+      ToastMessage.showError(context,'Please get OTP first');
+      return;
+    }
+
+    if (!_isOtpComplete()) {
+      ToastMessage.showError(context,'Please enter complete OTP');
+      return;
+    }
+    registrationProvider.setEmail(_emailController.text.trim());
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const PhoneOTPSignupscreen()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    for (var controller in _otpControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -24,7 +123,7 @@ class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
             padding: const EdgeInsets.symmetric(
               horizontal: 30.0,
               vertical: 10.0,
-            ),
+            ),      
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -49,15 +148,9 @@ class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
                 const SizedBox(height: 30),
                 CustomButton(
                   text: 'Send OTP',
-                  backgroundColor: primaryColor,
+                  backgroundColor:  primaryColor,
                   textColor: blackPrimary,
-                  onPressed: () {
-                    // Handle send OTP action
-                    // Navigator.pushReplacement(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => const NextScreen()),
-                    // );
-                  },
+                  onPressed: _sendOtp        
                 ),
                 const SizedBox(height: 40),
                 _buildOtpSection(label: 'OTP from Email'),
@@ -66,13 +159,7 @@ class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
                   text: 'Verify Email',
                   backgroundColor: blackPrimary,
                   textColor: whitePrimary,
-                  onPressed: () {
-                    // Handle verify email action
-                    // Navigator.pushReplacement(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => const NextScreen()),
-                    // );
-                  },
+                  onPressed: _verifyEmail,
                 ),
               ],
             ),
@@ -84,15 +171,25 @@ class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
 
   Widget _buildTextField({required String label}) {
     return TextField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
       style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
         labelText: label,
+        hintText: 'example@domain.com',
+        errorText: _emailError,
         labelStyle: const TextStyle(color: Colors.black54),
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.black54),
         ),
         focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.amber),
+          borderSide: BorderSide(color: blackPrimary),      
+        ),
+        errorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.red),
         ),
       ),
     );
@@ -113,36 +210,11 @@ class _EmailOTPSignupScreenState extends State<EmailOTPSignupScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
               5,
-              (index) => OTPBox(context: context),
+              (index) => OTPBox(context: context,controller: _otpControllers[index],),
             ),
           ),
         ),
       ],
     );
   }
-
-  Widget _buildOtpBox() {
-    return Container(
-      width: 50,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        border: Border.all(color: Colors.grey[400]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Center(
-        child: TextField(
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            counterText: "",
-          ),
-          maxLength: 1,
-        ),
-      ),
-    );
-  }
-
 }
