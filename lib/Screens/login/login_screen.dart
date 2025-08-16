@@ -19,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _nicController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+  bool _obscurePassword = true;
+  String? _nicError;
 
   @override
   Widget build(BuildContext context) {
@@ -49,33 +51,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 SizedBox(height: height * 0.0275),
-                _buildTextField(label: 'NIC Number',controller: _nicController),
+                _buildTextField(
+                  label: 'NIC Number',
+                  controller: _nicController,
+                  errorText: _nicError,
+                ),
                 SizedBox(height: height * 0.025),
-                _buildTextField(label: 'Password',controller: _passwordController, obscureText: true),
+                _buildPasswordField(),
                 SizedBox(height: height * 0.035),
                 _buildCaptcha(),
                 SizedBox(height: height * 0.05),
                 CustomButton(
-                  text: 'Submit',
+                  text: 'Login',
                   backgroundColor: primaryColor,
                   textColor: blackPrimary,
-                  onPressed: () async {
-                    final authProvider =
-                        Provider.of<AuthProvider>(context, listen: false);
-                    final nic = _nicController.text.trim();
-                    final password = _passwordController.text.trim();
-                    bool success = await authProvider.login(nic, password);
-                    if (success && mounted) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomeScreen()),
-                      );
-                    } else if (mounted) {
-                      ToastMessage.showError(
-                          context, authProvider.errorMessage);
-                    }
-                  },
+                  onPressed: _handleLogin,
                 ),
                 SizedBox(height: height * 0.035),
                 _buildRegisterLink(),
@@ -87,19 +77,58 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({required String label,required TextEditingController controller, bool obscureText = false}) {
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    String? errorText,
+  }) {
     return TextField(
-      obscureText: obscureText,
       controller: controller,
       style: const TextStyle(color: blackPrimary),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: greyTextColor),
+        errorText: errorText,
+        enabledBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: greyTextColor),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: blackPrimary),
+        ),
+        errorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.red),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextField(
+      obscureText: _obscurePassword,
+      controller: _passwordController,
+      style: const TextStyle(color: blackPrimary),
+      decoration: InputDecoration(
+        labelText: 'Password',
         labelStyle: const TextStyle(color: greyTextColor),
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: greyTextColor),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: blackPrimary),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+            color: greyTextColor,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
         ),
       ),
     );
@@ -126,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
             side: const BorderSide(color: greyTextColor),
           ),
           const Text(
-            'Captcha',
+            'I\'m not a robot',
             style: TextStyle(color: blackPrimary),
           ),
         ],
@@ -159,5 +188,49 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ],
     );
+  }
+
+  void _handleLogin() async {
+    // Validate NIC
+    final nic = _nicController.text.trim();
+    if (!_validateNIC(nic)) {
+      setState(() {
+        _nicError = 'Invalid NIC format';
+      });
+      return;
+    } else {
+      setState(() {
+        _nicError = null;
+      });
+    }
+
+    // Validate captcha
+    if (!_rememberMe) {
+      ToastMessage.showInfo(context, 'Please verify you are not a robot');
+      return;
+    }
+
+    // Proceed with login
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final password = _passwordController.text.trim();
+    bool success = await authProvider.login(nic, password);
+    
+    if (success && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else if (mounted) {
+      ToastMessage.showError(context, authProvider.errorMessage);
+    }
+  }
+
+  bool _validateNIC(String nic) {
+    if (nic.length == 9) {
+      return nic.endsWith('V') || nic.endsWith('v');
+    } else if (nic.length == 12) {
+      return RegExp(r'^[0-9]+$').hasMatch(nic);
+    }
+    return false;
   }
 }
