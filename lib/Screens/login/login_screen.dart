@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:gov_connect_app/Components/custom_button.dart';
 import 'package:gov_connect_app/Components/toast_message.dart';
 import 'package:gov_connect_app/Screens/register/signup_screen.dart';
@@ -190,8 +193,56 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, 
+      builder: (BuildContext context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5), 
+          child: Dialog(
+            surfaceTintColor: whitePrimary,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Welcome to Sri Lanka's E-government portal",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: blackPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Image.asset(
+                    'assets/images/logo/logo.png',
+                    height: 80,
+                  ),
+                  const SizedBox(height: 25),
+                  const SpinKitSpinningLines( 
+                    color: primaryColor,
+                    size: 48.0,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Logging In Progress...',
+                    style: TextStyle(color: primaryColor, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _handleLogin() async {
-    // Validate NIC
     final nic = _nicController.text.trim();
     if (!_validateNIC(nic)) {
       setState(() {
@@ -204,24 +255,35 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
 
-    // Validate captcha
     if (!_rememberMe) {
       ToastMessage.showInfo(context, 'Please verify you are not a robot');
       return;
     }
 
-    // Proceed with login
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final password = _passwordController.text.trim();
-    bool success = await authProvider.login(nic, password);
-    
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else if (mounted) {
-      ToastMessage.showError(context, authProvider.errorMessage);
+    _showLoadingDialog();
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final password = _passwordController.text.trim();
+      bool success = await authProvider.login(nic, password);
+      
+      if (mounted) {
+        Navigator.of(context).pop(); 
+      }
+
+      if (success && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else if (mounted) {
+        ToastMessage.showError(context, authProvider.errorMessage);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        ToastMessage.showError(context, "An unexpected error occurred. Please try again.");
+      }
     }
   }
 
