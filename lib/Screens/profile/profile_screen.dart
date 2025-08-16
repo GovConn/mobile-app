@@ -1,13 +1,11 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:gov_connect_app/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:gov_connect_app/Components/custom_button.dart';
 import 'package:gov_connect_app/theme/color_theme.dart';
 import 'package:gov_connect_app/providers/language_provider.dart';
 import '../../providers/auth_provider.dart';
-// Assuming you have a user model, if not, create one.
-// import '../../models/user_model.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,12 +18,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch user data as soon as the screen loads.
-    // The provider should handle its own loading/error state.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Use a Future to handle potential errors during the fetch call itself.
       Provider.of<AuthProvider>(context, listen: false).fetchUser().catchError((error) {
-         // Optionally show a snackbar or log the error
          debugPrint("Failed to fetch user: $error");
       });
     });
@@ -50,26 +44,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-        // Add a logout action button to the AppBar for better UX
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.red),
-            onPressed: () async {
-              await Provider.of<AuthProvider>(context, listen: false).logout();
-              // Navigate to login screen and remove all previous routes
-              if (mounted) {
-                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-              }
-            },
-          ),
-        ],
       ),
-      // Use a Consumer to react to changes in AuthProvider's state
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
-          // 1. Loading State
           if (authProvider.isUserLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: 
+            SpinKitSpinningLines(
+              color: primaryColor,
+            ));
           }
 
           // 2. Error State
@@ -95,20 +77,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           }
 
-          // 3. Success State
           if (authProvider.user != null) {
-            // Passing the user to a dedicated content widget
             return _buildProfileContent(context, authProvider.user!);
           }
-
-          // Fallback state (should not be reached if logic is correct)
           return const Center(child: Text('Something went wrong. Please restart the app.'));
         },
       ),
     );
   }
 
-  /// Main widget to display when user data is successfully loaded.
   Widget _buildProfileContent(BuildContext context, UserModel user) {
     final languageProvider = Provider.of<LanguageProvider>(context);
     
@@ -148,7 +125,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           
           const SizedBox(height: 30),
           
-          // Section for other user details
           const Text(
             'Personal Information',
             style: TextStyle(color: greyTextColor, fontSize: 16, fontWeight: FontWeight.bold),
@@ -157,9 +133,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildDetailRow(Icons.credit_card, 'NIC', user.nic),
           const Divider(),
           // Assuming User model has email and phone fields
-          _buildDetailRow(Icons.email, 'Email', user.email ?? 'Not provided'),
+          _buildDetailRow(Icons.email, 'Email', user.email),
           const Divider(),
-          _buildDetailRow(Icons.phone, 'Phone', user.phone ?? 'Not provided'),
+          _buildDetailRow(Icons.phone, 'Phone', user.phone),
           
           const SizedBox(height: 30),
 
@@ -173,12 +149,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           
           const Spacer(),
           CustomButton(
-            text: 'Update',
+            text: 'Logout',
             backgroundColor: primaryColor,
             textColor: blackPrimary,
-            onPressed: () {
-              // Add update logic here if needed, then pop
-              Navigator.pop(context);
+            onPressed: () async {
+              await Provider.of<AuthProvider>(context, listen: false).logout();
+              if (mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+              }
             },
           ),
           const SizedBox(height: 70),
@@ -187,7 +165,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
   
-  /// Widget for displaying user verification status
   Widget _buildVerificationStatus(bool isActive) {
       final color = isActive ? Colors.green : Colors.red;
       final text = isActive ? 'Verified' : 'Not Verified';
@@ -203,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
   }
   
-  /// Reusable widget for displaying a row of user details.
+  
   Widget _buildDetailRow(IconData icon, String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -227,9 +204,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
   
-  /// Widget for the language selection dropdown.
+
   Widget _buildLanguageDropdown(BuildContext context, LanguageProvider languageProvider) {
-    // A map to hold language codes and their display names.
     final Map<String, String> languages = {
       'english': 'English',
       'sinhala': 'සිංහල',
